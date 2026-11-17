@@ -59,7 +59,6 @@ button[disabled]{opacity:.6;cursor:default}
 .w-ico{width:22px;height:22px;border:1px solid #ECEAE5;border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
 .w-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;border:1px solid #ECEAE5}
 .w-row.on{border-color:var(--accent);background:#FDF1EA}
-.w-row .k{font-size:10px;color:var(--muted);border:1px solid #E2DFD8;border-radius:4px;width:16px;text-align:center;line-height:15px}
 .w-row .dot{width:7px;height:7px}
 .w-row .n{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .w-row .t{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}

@@ -225,7 +225,7 @@
     const top = `
       <div class="topbar">
         <a class="logo" href="../" title="Web de nprojects">${LOGO}nprojects <span class="beta">beta</span></a>
-        <nav class="links">${installEvt && !standalone() ? '<button class="install" data-act="install">Instalar app</button>' : ''}<button data-act="go" data-v="feedback">Comentarios</button><button data-act="go" data-v="settings">Ajustes</button></nav>
+        ${installEvt && !standalone() ? '<button class="install" data-act="install">Instalar app</button>' : ''}
       </div>`;
     const head = `
       <section class="cur ${a ? '' : 'paused'}" style="--c:${a ? pcolor(a.p) : 'var(--line)'}">
@@ -243,7 +243,11 @@
           <div><strong>Empieza añadiendo tus proyectos</strong><br><span class="muted small">Hasta ${MAX}. Luego, un clic en uno para empezar a contar.</span></div>
           <form class="addrow" data-form="add"><input name="name" placeholder="Nombre del proyecto" maxlength="40" autocomplete="off" aria-label="Nombre del proyecto"><button class="primary">Añadir</button></form>
           <p class="welcome">Tus datos se guardan solo en este navegador. Puedes cerrar la pestaña cuando quieras: el contador sigue contando y lo verás al volver.</p>
-        </div>`;
+        </div>
+      <nav class="links">
+        <button data-act="go" data-v="settings">Ajustes</button>
+        <button data-act="go" data-v="feedback">Comentarios</button>
+      </nav>`;
     }
     const btns = ps.map((p, i) => `
       <button class="pbtn ${a && a.p === p.id ? 'on' : ''}" data-act="switch" data-pid="${p.id}" style="--c:${p.color}" title="Tecla ${keyFor(i)}${a && a.p === p.id ? ' · clic para pausar' : ''}">
@@ -264,6 +268,8 @@
         <button data-act="go" data-v="projects">Proyectos</button>
         <button data-act="compact">${prefs.compact ? 'Vista normal' : 'Compacto'}</button>
         ${pipOk ? '<button data-act="pip">Ventana flotante</button>' : ''}
+        <button data-act="go" data-v="settings">Ajustes</button>
+        <button data-act="go" data-v="feedback">Comentarios</button>
       </nav>`;
   }
 

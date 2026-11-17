@@ -154,4 +154,6 @@
     #app{min-height:0}
   }
 
-  .topbar .links button.install{color:var(--brand);font-weight:600}
+  .topbar{min-height:30px}
+  .topbar .install{color:var(--brand);border-color:color-mix(in srgb,var(--brand) 45%,var(--line));font-weight:600;font-size:13px;padding:5px 12px;border-radius:999px;background:transparent}
+  .topbar .install:hover{border-color:var(--brand)}

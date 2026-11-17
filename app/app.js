@@ -28,7 +28,7 @@
   let viewDate = null;
   let busy = false;
   let pipWin = null;
-  let prefs = { compact: false, stats: true, fit: true, invite: null };
+  let prefs = { compact: false, stats: true, fit: true, invite: null, pipBig: false };
   let installEvt = null;
   let dismissedForgot = null;
   let copyText = null;
@@ -216,6 +216,8 @@
 
   const ICON_PAUSE = '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1" width="2.5" height="8" rx=".6"/><rect x="6" y="1" width="2.5" height="8" rx=".6"/></svg>';
   const ICON_STOP = '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1"/></svg>';
+  const ICON_GROW = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 4.2V1h3.2M9 5.8V9H5.8M1 1l3 3M9 9 6 6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  const ICON_SHRINK = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M4 1v3H1M6 9V6h3M1 1l3 3M9 9 6 6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
   const LOGO = '<svg width="18" height="18" viewBox="0 0 28 28" aria-hidden="true"><circle cx="8" cy="18" r="5" fill="#2F6BFF"/><circle cx="20" cy="18" r="5" fill="#C2410C"/><circle cx="14" cy="8" r="5" fill="#1F9D55"/></svg>';
 
   function mainHTML() {
@@ -231,6 +233,7 @@
         <div class="cur-name">${a ? `<span class="live-dot"></span>${esc(pname(a.p))}` : '<span class="state">En pausa</span>'}</div>
         <div class="cur-time num" id="curTotal">00:00:00</div>
         <div class="ctrls">
+          ${pipWin ? `<button class="ico" data-act="pipsize" title="${prefs.pipBig ? 'Vista compacta' : 'Vista amplia'}" aria-label="${prefs.pipBig ? 'Vista compacta' : 'Vista amplia'}">${prefs.pipBig ? ICON_SHRINK : ICON_GROW}</button>` : ''}
           <button class="ico" data-act="pause" ${a ? '' : 'disabled'} title="Pausa" aria-label="Pausa">${ICON_PAUSE}</button>
           <button class="ico stop" data-act="end" title="Terminar jornada" aria-label="Terminar jornada">${ICON_STOP}</button>
         </div>
@@ -478,10 +481,20 @@
   }
 
   // ---------- Ventana flotante (Chrome / Edge) ----------
+  // Tamaño de la ventana flotante: compacta o amplia
+  const pipSize = big => { const n = Math.max(1, live().length); return big ? { width: 320, height: 100 + n * 42 } : { width: 270, height: 50 + n * 27 }; };
+  const pipNote = document.getElementById('pipnote');
+  function fitPip() {
+    if (!pipWin) return;
+    requestAnimationFrame(() => {
+      const w = pipSize(prefs.pipBig).width;
+      const h = Math.ceil(app.getBoundingClientRect().height);
+      try { pipWin.resizeTo(w + (pipWin.outerWidth - pipWin.innerWidth), h + (pipWin.outerHeight - pipWin.innerHeight)); } catch (e) {}
+    });
+  }
   async function openPip() {
     try {
-      const n = Math.max(1, live().length);
-      const w = await window.documentPictureInPicture.requestWindow({ width: 250, height: 50 + n * 27 });
+      const w = await window.documentPictureInPicture.requestWindow(pipSize(prefs.pipBig));
       view = 'main';
       [...document.styleSheets].forEach(ss => {
         try { const st = w.document.createElement('style'); st.textContent = [...ss.cssRules].map(r => r.cssText).join('\n'); w.document.head.appendChild(st); }
@@ -490,16 +503,21 @@
       w.document.title = 'nprojects';
       w.document.body.appendChild(app);
       app.classList.add('in-pip');
+      app.classList.toggle('pip-big', !!prefs.pipBig);
+      if (pipNote) pipNote.hidden = false;
       w.document.addEventListener('keydown', onKey);
       pipWin = w;
       track('pip');
-      w.addEventListener('pagehide', () => { document.body.appendChild(app); app.classList.remove('in-pip'); pipWin = null; render(); });
+      w.addEventListener('pagehide', () => { document.body.insertBefore(app, document.body.firstChild); app.classList.remove('in-pip', 'pip-big'); if (pipNote) pipNote.hidden = true; pipWin = null; render(); });
       render();
     } catch (e) { toast('Tu navegador no permite abrir la ventana flotante.'); }
   }
 
   let toastT;
   function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600); }
+
+  const pipBack = document.getElementById('pipback');
+  if (pipBack) pipBack.addEventListener('click', () => { if (pipWin) pipWin.close(); });
 
   // ---------- Eventos ----------
   app.addEventListener('click', ev => {
@@ -519,6 +537,7 @@
     if (act === 'next') { viewDate = shiftKey(viewDate, 1); copyText = null; return render(); }
     if (act === 'compact') { prefs.compact = !prefs.compact; prefsSave(); if (prefs.compact) track('compact'); return render(); }
     if (act === 'pip') return openPip();
+    if (act === 'pipsize') { prefs.pipBig = !prefs.pipBig; prefsSave(); app.classList.toggle('pip-big', prefs.pipBig); track(prefs.pipBig ? 'pip_big' : 'pip_small'); render(); return fitPip(); }
     if (act === 'copy') return doCopy(b.dataset.what);
     if (act === 'keep') { dismissedForgot = S.active && S.active.s; return render(); }
     if (act === 'color') { const p = proj(pid); p.color = PALETTE[(PALETTE.indexOf(p.color) + 1) % PALETTE.length]; save(); return render(); }

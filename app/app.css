@@ -125,6 +125,27 @@
   #app.in-pip .pbtn .ptime{font-size:11px}
   #app.in-pip .banner{padding:6px 8px;font-size:11px;gap:5px}
   #app.in-pip .banner button,#app.in-pip .banner input{padding:3px 6px;font-size:11px}
+  /* Ventana flotante: vista amplia */
+  #app.in-pip.pip-big{padding:10px;gap:8px;font-size:14px}
+  #app.in-pip.pip-big #view{gap:8px}
+  #app.in-pip.pip-big .cur{padding:10px 12px 10px 16px;border-radius:12px;flex-wrap:wrap;row-gap:2px}
+  #app.in-pip.pip-big .cur::before{width:5px}
+  #app.in-pip.pip-big .cur-name{font-size:14px;flex:1 1 100%}
+  #app.in-pip.pip-big .cur-time{font-size:26px;font-weight:500;margin:0}
+  #app.in-pip.pip-big .ctrls{margin-left:auto}
+  #app.in-pip.pip-big .ico{width:26px;height:26px;border-radius:7px}
+  #app.in-pip.pip-big .ico svg{width:11px;height:11px}
+  #app.in-pip.pip-big .grid{gap:6px}
+  #app.in-pip.pip-big .pbtn{gap:9px;padding:8px 11px;border-radius:9px;font-size:14px}
+  #app.in-pip.pip-big .pbtn .dot{width:9px;height:9px}
+  #app.in-pip.pip-big .pbtn .ptime{font-size:13px}
+  #app.in-pip.pip-big .banner{padding:8px 10px;font-size:12px}
+  /* Mensaje en la ventana principal mientras la flotante está abierta */
+  .pipnote{max-width:340px;margin:18vh auto 0;padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted)}
+  .pipnote[hidden]{display:none}
+  .pipnote p{margin:0;line-height:1.5}
+  .pipnote .pipnote-title{color:var(--ink);font-weight:600;font-size:16px}
+  .pipnote button{margin-top:6px}
 
   /* Cabecera de la app */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px}

@@ -151,4 +151,5 @@ button[disabled]{opacity:.6;cursor:default}
   .desk-window{right:24px}
   .cta{padding:40px 24px}
   .privacy{padding:28px 24px}
+  .shots{row-gap:56px}
 }

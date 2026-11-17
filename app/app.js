@@ -307,7 +307,7 @@
         <div class="timeline">${tl}</div>
         <div class="tl-labels num"><span>${clock(t0)}</span><span>${clock(t1)}</span></div>
       </div>
-      <div class="btnrow"><button data-act="copy" data-what="text">Copiar resumen</button><button data-act="copy" data-what="csv">Copiar CSV</button></div>
+      <div class="btnrow"><button data-act="copy" data-what="text">Copiar resumen</button><button data-act="csv">Descargar CSV</button></div>
       ${copyText ? `<textarea class="copybox" readonly aria-label="Texto para copiar">${esc(copyText)}</textarea>` : ''}`;
   }
 
@@ -450,13 +450,24 @@
     const segs = (S.days[k] || []).slice();
     if (S.active) split(S.active.p, S.active.s, Date.now()).forEach(x => x.key === k && segs.push(x.seg));
     const q = s => '"' + String(s).replace(/"/g, '""') + '"';
-    return 'fecha,proyecto,inicio,fin,minutos\n' + segs.map(g => [k, q(pname(g.p)), clock(g.s), clock(g.e), Math.round((g.e - g.s) / 60000)].join(',')).join('\n');
+    // Punto y coma: es el separador que espera Excel en español
+    return 'fecha;proyecto;inicio;fin;minutos\r\n' + segs.sort((a, b) => a.s - b.s).map(g => [k, q(pname(g.p)), clock(g.s), clock(g.e), Math.round((g.e - g.s) / 60000)].join(';')).join('\r\n') + '\r\n';
   }
   async function doCopy(what) {
     const txt = buildCopy(what);
     track(what === 'text' ? 'copy_text' : 'copy_csv');
     try { await navigator.clipboard.writeText(txt); copyText = null; toast('Copiado'); render(); }
     catch (e) { copyText = txt; render(); toast('Selecciona el texto de abajo y cópialo'); }
+  }
+  function doCsv() {
+    // BOM al principio para que Excel lea bien las tildes
+    const blob = new Blob(['\ufeff' + buildCopy('csv')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nprojects-${viewDate}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    track('download_csv'); toast('CSV descargado');
   }
   function doExport() {
     const data = { app: 'nprojects', format: 1, exportedAt: new Date().toISOString(), data: S };
@@ -539,6 +550,7 @@
     if (act === 'pip') return openPip();
     if (act === 'pipsize') { prefs.pipBig = !prefs.pipBig; prefsSave(); app.classList.toggle('pip-big', prefs.pipBig); track(prefs.pipBig ? 'pip_big' : 'pip_small'); render(); return fitPip(); }
     if (act === 'copy') return doCopy(b.dataset.what);
+    if (act === 'csv') return doCsv();
     if (act === 'keep') { dismissedForgot = S.active && S.active.s; return render(); }
     if (act === 'color') { const p = proj(pid); p.color = PALETTE[(PALETTE.indexOf(p.color) + 1) % PALETTE.length]; save(); return render(); }
     if (act === 'archive') {

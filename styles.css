@@ -93,7 +93,7 @@ button[disabled]{opacity:.6;cursor:default}
 .privacy-list svg{flex:0 0 auto;margin-top:2px}
 
 /* Capturas */
-.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:32px}
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-top:32px}
 .shot{margin:0;display:flex;flex-direction:column;gap:14px}
 .shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px rgba(23,23,26,.08);background:#fff}
 .shot figcaption{font-size:15px;line-height:1.5;color:var(--body)}

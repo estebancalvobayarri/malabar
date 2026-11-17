@@ -115,7 +115,7 @@ button[disabled]{opacity:.6;cursor:default}
 .cmp-row>span:last-child{color:var(--muted)}
 .cmp-row strong{color:var(--accent-dark);font-weight:600}
 .cmp-head{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;background:#fff}
-.cmp-head>span:nth-child(2){color:var(--accent);text-transform:none;letter-spacing:0;font-size:14px}
+.cmp-head>.cmp-brand{display:flex;align-items:center;gap:6px;color:var(--ink);text-transform:none;letter-spacing:-.01em;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:16px}
 
 /* Precios */
 .prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}

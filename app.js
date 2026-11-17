@@ -59,3 +59,29 @@
     });
   });
 })();
+
+// Carrusel de capturas (móvil): puntos que siguen al desplazamiento
+(function () {
+  var track = document.querySelector('.shots');
+  if (!track) return;
+  var slides = track.querySelectorAll('.shot');
+  var dots = document.createElement('div');
+  dots.className = 'shots-dots';
+  slides.forEach(function (s, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Ver captura ' + (i + 1) + ' de ' + slides.length);
+    b.addEventListener('click', function () { track.scrollTo({ left: s.offsetLeft - track.offsetLeft - 24, behavior: 'smooth' }); });
+    dots.appendChild(b);
+  });
+  track.parentNode.insertBefore(dots, track.nextSibling);
+  function update() {
+    var w = slides[0].offsetWidth + 16;
+    var i = Math.round(track.scrollLeft / w);
+    if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 4) i = slides.length - 1;
+    dots.querySelectorAll('button').forEach(function (b, k) { b.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+  }
+  track.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();

@@ -84,21 +84,13 @@ button[disabled]{opacity:.6;cursor:default}
 .card h3{font-size:18px;font-weight:600}
 .card p{font-size:15px;line-height:1.55;color:var(--body)}
 
-.two-col{display:flex;flex-wrap:wrap;gap:24px}
-.summary{flex:1 1 460px;min-width:0;background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:18px}
-.sum-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;font-size:14px}
-.sum-total{font-family:"Space Grotesk",sans-serif;font-size:32px;font-weight:600}
-.sum-row{display:flex;flex-direction:column;gap:6px}
-.sum-line{display:flex;align-items:center;gap:10px;font-size:15px}
-.sum-line .dot{width:10px;height:10px}
-.grow{flex:1 1 auto}
-.num{font-variant-numeric:tabular-nums;white-space:nowrap}
-.pct{width:40px;text-align:right;color:var(--muted);font-size:13px}
-.bar{height:8px;border-radius:4px;background:#EFEDE8;overflow:hidden}
-.bar i{display:block;height:8px;border-radius:4px}
-.privacy{flex:1 1 340px;min-width:0;background:var(--accent-soft);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:14px}
-.privacy h3{font-family:"Space Grotesk",sans-serif;font-size:26px;line-height:1.15;color:#4A1A03}
-.privacy p{font-size:16px;line-height:1.6;color:#5C2A0E}
+.privacy{background:var(--accent-soft);border-radius:20px;padding:36px 40px;display:flex;flex-wrap:wrap;align-items:center;gap:24px 48px}
+.privacy-head{flex:1 1 360px;min-width:0;display:flex;align-items:center;gap:18px}
+.privacy-icon{flex:0 0 auto;width:52px;height:52px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.privacy h3{font-family:"Space Grotesk",sans-serif;font-size:clamp(22px,2.4vw,28px);line-height:1.15;letter-spacing:-.01em;color:#4A1A03}
+.privacy-list{flex:1 1 320px;min-width:0;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.privacy-list li{display:flex;align-items:flex-start;gap:10px;font-size:16px;line-height:1.4;color:#5C2A0E}
+.privacy-list svg{flex:0 0 auto;margin-top:2px}
 
 /* Capturas */
 .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-top:32px}
@@ -158,4 +150,5 @@ button[disabled]{opacity:.6;cursor:default}
   .desk{height:380px}
   .desk-window{right:24px}
   .cta{padding:40px 24px}
+  .privacy{padding:28px 24px}
 }

@@ -19,7 +19,8 @@
   let viewDate = null;
   let busy = false;
   let pipWin = null;
-  let prefs = { compact: false, stats: true, fit: true };
+  let prefs = { compact: false, stats: true, fit: true, invite: null };
+  let installEvt = null;
   let dismissedForgot = null;
   let copyText = null;
   let feedbackSent = false;
@@ -89,6 +90,19 @@
   }
   function prefsSave() { try { localStorage.setItem(LS_PREFS, JSON.stringify(prefs)); } catch (e) {} }
 
+  // Código de invitación del enlace (?i=amigos): se guarda la primera vez y se quita de la URL
+  function readInvite() {
+    try {
+      const u = new URL(location.href);
+      const raw = (u.searchParams.get('i') || '').toLowerCase().trim();
+      if (raw) {
+        if (/^[a-z0-9_-]{1,30}$/.test(raw) && !prefs.invite) { prefs.invite = raw; prefsSave(); }
+        u.searchParams.delete('i');
+        history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+      }
+    } catch (e) {}
+  }
+
   // Otra pestaña con Malabar abierta cambió los datos: nos ponemos al día
   window.addEventListener('storage', e => {
     if (e.key === LS_KEY) { try { S = normalize(JSON.parse(e.newValue || 'null')); } catch (_) {} softRender(); }
@@ -126,7 +140,7 @@
   }
   function mFlush(keepalive) {
     if (!M || !M.day || !prefs.stats || !sbOn()) return;
-    const row = { anon_id: M.anonId, day: M.day, switches: M.switches || 0, projects: live().length, features: (M.features || []).slice(0, 30), app_version: APP_VERSION };
+    const row = { anon_id: M.anonId, day: M.day, switches: M.switches || 0, projects: live().length, features: (M.features || []).slice(0, 30), app_version: APP_VERSION, invite: prefs.invite || null };
     const sig = JSON.stringify(row);
     if (sig === M.sent) return;
     M.sent = sig; mSave();
@@ -202,7 +216,7 @@
     const top = `
       <div class="topbar">
         <a class="logo" href="../" title="Web de Malabar">${LOGO}Malabar <span class="beta">beta</span></a>
-        <nav class="links"><button data-act="go" data-v="feedback">Comentarios</button><button data-act="go" data-v="settings">Ajustes</button></nav>
+        <nav class="links">${installEvt && !standalone() ? '<button class="install" data-act="install">Instalar app</button>' : ''}<button data-act="go" data-v="feedback">Comentarios</button><button data-act="go" data-v="settings">Ajustes</button></nav>
       </div>`;
     const head = `
       <section class="cur ${a ? '' : 'paused'}" style="--c:${a ? pcolor(a.p) : 'var(--line)'}">
@@ -347,8 +361,14 @@
       <div class="panel">
         <h3>Estadísticas anónimas</h3>
         <label class="check"><input type="checkbox" data-pref="stats" ${prefs.stats ? 'checked' : ''}>
-          <span>Compartir estadísticas anónimas de uso para mejorar la beta. Solo se envía qué días usas Malabar, cuántas veces cambias de proyecto, cuántos proyectos tienes y qué funciones usas. Nunca los nombres de tus proyectos ni tus tiempos.</span></label>
+          <span>Compartir estadísticas anónimas de uso para mejorar la beta. Solo se envía qué días usas Malabar, cuántas veces cambias de proyecto, cuántos proyectos tienes, qué funciones usas y, si entraste con un enlace de invitación, su código de grupo. Nunca los nombres de tus proyectos ni tus tiempos.</span></label>
       </div>
+      ${!standalone() ? `<div class="panel">
+        <h3>Instalar como app</h3>
+        ${installEvt ? `<p class="small muted">Tendrás Malabar con su icono y su propia ventana, sin pestañas del navegador.</p><button class="primary" data-act="install">Instalar Malabar</button>`
+          : isSafari() ? `<p class="small muted">En Safari: menú Archivo → «Añadir al Dock». Ojo: Safari no permite la ventana flotante; para usarla, abre Malabar en Chrome o Edge.</p>`
+          : `<p class="small muted">En Chrome o Edge: menú ⋮ → «Enviar, guardar y compartir» → «Instalar página como aplicación». Si ya la tienes instalada, ábrela desde su icono.</p>`}
+      </div>` : ''}
       ${standalone() ? `<div class="panel">
         <h3>Ventana</h3>
         <label class="check"><input type="checkbox" data-pref="fit" ${prefs.fit ? 'checked' : ''}>
@@ -509,6 +529,7 @@
       S = { projects: [], active: null, days: {} }; save(); view = 'main'; render(); toast('Datos borrados'); return;
     }
     if (act === 'fb-again') { feedbackSent = false; return render(); }
+    if (act === 'install') return doInstall();
   });
 
   app.addEventListener('submit', ev => {
@@ -533,7 +554,7 @@
       if (!message) return toast('Escribe tu comentario');
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return toast('Revisa el email');
       const btn = f.querySelector('button[type=submit]'); btn.disabled = true;
-      sbInsert('feedback', { anon_id: M ? M.anonId : null, message: message.slice(0, 4000), email: email || null, app_version: APP_VERSION })
+      sbInsert('feedback', { anon_id: M ? M.anonId : null, message: message.slice(0, 4000), email: email || null, app_version: APP_VERSION, invite: prefs.invite || null })
         .then(() => { feedbackSent = true; render(); })
         .catch(() => { btn.disabled = false; toast('No se pudo enviar. Inténtalo de nuevo.'); });
     }
@@ -577,9 +598,22 @@
   }
   document.addEventListener('keydown', onKey);
 
+  // ---------- Instalar como app ----------
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; softRender(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; track('installed'); toast('Malabar instalada. Ya la tienes como app.'); softRender(); });
+  async function doInstall() {
+    if (!installEvt) return;
+    const e = installEvt; installEvt = null;
+    try { await e.prompt(); const r = await e.userChoice; if (r && r.outcome !== 'accepted') installEvt = e; } catch (_) {}
+    render();
+  }
+  const isSafari = () => /^((?!chrome|chromium|android|edg).)*safari/i.test(navigator.userAgent);
+
   // ---------- Arranque ----------
   load();
+  readInvite();
   mLoad();
+  if (standalone()) track('standalone');
   render();
   setInterval(tick, 1000);
   setInterval(() => mFlush(false), 30 * 60e3);

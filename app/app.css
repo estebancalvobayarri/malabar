@@ -153,3 +153,5 @@
   @media (display-mode: standalone), (display-mode: window-controls-overlay){
     #app{min-height:0}
   }
+
+  .topbar .links button.install{color:var(--brand);font-weight:600}

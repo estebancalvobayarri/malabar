@@ -12,15 +12,13 @@
 
   function save(email, source) {
     if (!live) return Promise.resolve();
+    var headers = { 'Content-Type': 'application/json', apikey: cfg.supabaseAnonKey, Prefer: 'return=minimal' };
+    // Las claves antiguas (JWT) van también como Bearer; las nuevas sb_publishable_ solo como apikey
+    if (cfg.supabaseAnonKey.indexOf('sb_') !== 0) headers.Authorization = 'Bearer ' + cfg.supabaseAnonKey;
     var url = cfg.supabaseUrl.replace(/\/$/, '') + '/rest/v1/' + (cfg.table || 'waitlist');
     return fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: cfg.supabaseAnonKey,
-        Authorization: 'Bearer ' + cfg.supabaseAnonKey,
-        Prefer: 'return=minimal'
-      },
+      headers: headers,
       body: JSON.stringify({
         email: email,
         source: source,

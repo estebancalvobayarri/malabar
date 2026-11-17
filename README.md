@@ -1,4 +1,4 @@
-# Malabar
+# nprojects
 
 Contador de tiempo multiproyecto para Mac y Windows. Este repositorio aloja la web de lista de espera y la web app en beta.
 
@@ -23,4 +23,4 @@ En `app/`: la herramienta en sí, servida en `/app/`. Sin compilación.
 
 ## Supabase
 
-Proyecto «Malabar». Tablas `waitlist`, `usage_daily` y `feedback`: la web solo puede insertar, nunca leer.
+Proyecto «nprojects». Tablas `waitlist`, `usage_daily` y `feedback`: la web solo puede insertar, nunca leer.

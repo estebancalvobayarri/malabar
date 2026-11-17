@@ -1,5 +1,5 @@
 (function () {
-  var cfg = window.MALABAR_CONFIG || {};
+  var cfg = window.NPROJECTS_CONFIG || {};
   var live = !!(cfg.supabaseUrl && cfg.supabaseAnonKey);
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   var OK_TEXT = '¡Estás dentro! Te avisaremos en cuanto abramos la beta.';

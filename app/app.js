@@ -3,10 +3,19 @@
   const APP_VERSION = 'web-0.1';
   const PALETTE = ['#4f7cff','#f2994a','#27ae60','#eb5757','#9b51e0','#2d9cdb','#e0b400','#e056a0','#00a99d','#8d6e63'];
   const MAX = 10;
-  const LS_KEY = 'malabar-data-v1';
-  const LS_PREFS = 'malabar-prefs-v1';
-  const LS_METRICS = 'malabar-metrics-v1';
-  const CFG = window.MALABAR_CONFIG || {};
+  const LS_KEY = 'nprojects-data-v1';
+  const LS_PREFS = 'nprojects-prefs-v1';
+  const LS_METRICS = 'nprojects-metrics-v1';
+  const CFG = window.NPROJECTS_CONFIG || {};
+
+  // Migración desde el nombre anterior de la app (claves malabar-*)
+  try {
+    [['malabar-data-v1', LS_KEY], ['malabar-prefs-v1', LS_PREFS], ['malabar-metrics-v1', LS_METRICS]].forEach(([oldK, newK]) => {
+      const v = localStorage.getItem(oldK);
+      if (v !== null && localStorage.getItem(newK) === null) localStorage.setItem(newK, v);
+      if (v !== null) localStorage.removeItem(oldK);
+    });
+  } catch (e) {}
 
   const app = document.getElementById('app');
   const $ = s => app.querySelector(s);
@@ -103,7 +112,7 @@
     } catch (e) {}
   }
 
-  // Otra pestaña con Malabar abierta cambió los datos: nos ponemos al día
+  // Otra pestaña con nprojects abierta cambió los datos: nos ponemos al día
   window.addEventListener('storage', e => {
     if (e.key === LS_KEY) { try { S = normalize(JSON.parse(e.newValue || 'null')); } catch (_) {} softRender(); }
   });
@@ -215,7 +224,7 @@
     const a = S.active;
     const top = `
       <div class="topbar">
-        <a class="logo" href="../" title="Web de Malabar">${LOGO}Malabar <span class="beta">beta</span></a>
+        <a class="logo" href="../" title="Web de nprojects">${LOGO}nprojects <span class="beta">beta</span></a>
         <nav class="links">${installEvt && !standalone() ? '<button class="install" data-act="install">Instalar app</button>' : ''}<button data-act="go" data-v="feedback">Comentarios</button><button data-act="go" data-v="settings">Ajustes</button></nav>
       </div>`;
     const head = `
@@ -361,12 +370,12 @@
       <div class="panel">
         <h3>Estadísticas anónimas</h3>
         <label class="check"><input type="checkbox" data-pref="stats" ${prefs.stats ? 'checked' : ''}>
-          <span>Compartir estadísticas anónimas de uso para mejorar la beta. Solo se envía qué días usas Malabar, cuántas veces cambias de proyecto, cuántos proyectos tienes, qué funciones usas y, si entraste con un enlace de invitación, su código de grupo. Nunca los nombres de tus proyectos ni tus tiempos.</span></label>
+          <span>Compartir estadísticas anónimas de uso para mejorar la beta. Solo se envía qué días usas nprojects, cuántas veces cambias de proyecto, cuántos proyectos tienes, qué funciones usas y, si entraste con un enlace de invitación, su código de grupo. Nunca los nombres de tus proyectos ni tus tiempos.</span></label>
       </div>
       ${!standalone() ? `<div class="panel">
         <h3>Instalar como app</h3>
-        ${installEvt ? `<p class="small muted">Tendrás Malabar con su icono y su propia ventana, sin pestañas del navegador.</p><button class="primary" data-act="install">Instalar Malabar</button>`
-          : isSafari() ? `<p class="small muted">En Safari: menú Archivo → «Añadir al Dock». Ojo: Safari no permite la ventana flotante; para usarla, abre Malabar en Chrome o Edge.</p>`
+        ${installEvt ? `<p class="small muted">Tendrás nprojects con su icono y su propia ventana, sin pestañas del navegador.</p><button class="primary" data-act="install">Instalar nprojects</button>`
+          : isSafari() ? `<p class="small muted">En Safari: menú Archivo → «Añadir al Dock». Ojo: Safari no permite la ventana flotante; para usarla, abre nprojects en Chrome o Edge.</p>`
           : `<p class="small muted">En Chrome o Edge: menú ⋮ → «Enviar, guardar y compartir» → «Instalar página como aplicación». Si ya la tienes instalada, ábrela desde su icono.</p>`}
       </div>` : ''}
       ${standalone() ? `<div class="panel">
@@ -379,7 +388,7 @@
         <p class="small muted">Elimina proyectos, tramos e historial de este navegador. No se puede deshacer.</p>
         <button class="danger" data-act="wipe">Borrar todos los datos</button>
       </div>
-      <div class="hint">Malabar ${APP_VERSION} · beta gratuita</div>`;
+      <div class="hint">nprojects ${APP_VERSION} · beta gratuita</div>`;
   }
 
   function feedbackHTML() {
@@ -420,7 +429,7 @@
     const cs = $('#curSeg'); if (cs && a) cs.textContent = hms(Date.now() - a.s);
     const dt = $('#dayTotal'); if (dt) dt.textContent = hm(sum);
     app.querySelectorAll('[data-ptime]').forEach(el => el.textContent = hms(t[el.dataset.ptime] || 0));
-    document.title = a ? `● ${hms(t[a.p] || 0)} · ${pname(a.p)}` : 'Malabar · beta';
+    document.title = a ? `● ${hms(t[a.p] || 0)} · ${pname(a.p)}` : 'nprojects · beta';
   }
 
   // ---------- Copiar y exportar ----------
@@ -443,11 +452,11 @@
     catch (e) { copyText = txt; render(); toast('Selecciona el texto de abajo y cópialo'); }
   }
   function doExport() {
-    const data = { app: 'malabar', format: 1, exportedAt: new Date().toISOString(), data: S };
+    const data = { app: 'nprojects', format: 1, exportedAt: new Date().toISOString(), data: S };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `malabar-copia-${todayKey()}.json`;
+    a.download = `nprojects-copia-${todayKey()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     track('export'); toast('Copia descargada');
@@ -455,9 +464,9 @@
   function doImport(file) {
     const r = new FileReader();
     r.onload = () => {
-      let o; try { o = JSON.parse(r.result); } catch (e) { return toast('Ese archivo no es una copia de Malabar.'); }
-      const d = normalize(o && o.app === 'malabar' ? o.data : null);
-      if (!d.projects.length) return toast('Ese archivo no es una copia de Malabar.');
+      let o; try { o = JSON.parse(r.result); } catch (e) { return toast('Ese archivo no es una copia de nprojects.'); }
+      const d = normalize(o && (o.app === 'nprojects' || o.app === 'malabar') ? o.data : null);
+      if (!d.projects.length) return toast('Ese archivo no es una copia de nprojects.');
       if (!confirm('Esto sustituye todos los datos de este navegador por los de la copia. ¿Continuar?')) return;
       S = d; save(); track('import'); view = 'main'; render(); toast('Copia importada');
     };
@@ -474,7 +483,7 @@
         try { const st = w.document.createElement('style'); st.textContent = [...ss.cssRules].map(r => r.cssText).join('\n'); w.document.head.appendChild(st); }
         catch (e) { if (ss.href) { const l = w.document.createElement('link'); l.rel = 'stylesheet'; l.href = ss.href; w.document.head.appendChild(l); } }
       });
-      w.document.title = 'Malabar';
+      w.document.title = 'nprojects';
       w.document.body.appendChild(app);
       app.classList.add('in-pip');
       w.document.addEventListener('keydown', onKey);
@@ -600,7 +609,7 @@
 
   // ---------- Instalar como app ----------
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; softRender(); });
-  window.addEventListener('appinstalled', () => { installEvt = null; track('installed'); toast('Malabar instalada. Ya la tienes como app.'); softRender(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; track('installed'); toast('nprojects instalada. Ya la tienes como app.'); softRender(); });
   async function doInstall() {
     if (!installEvt) return;
     const e = installEvt; installEvt = null;

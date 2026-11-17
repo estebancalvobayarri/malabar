@@ -1,6 +1,6 @@
 {
-  "name": "Malabar",
-  "short_name": "Malabar",
+  "name": "nprojects",
+  "short_name": "nprojects",
   "description": "Contador de tiempo por proyecto",
   "lang": "es",
   "start_url": "./",

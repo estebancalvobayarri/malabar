@@ -3,7 +3,7 @@
 // en modo demostración: muestra la confirmación pero no guarda el email.
 // La clave publicable de Supabase es pública por diseño; la seguridad la dan las
 // políticas RLS de la tabla (solo permitir INSERT, nunca SELECT).
-window.MALABAR_CONFIG = {
+window.NPROJECTS_CONFIG = {
   supabaseUrl: 'https://owgnozgnkqllqpwlcedm.supabase.co',
   supabaseAnonKey: 'sb_publishable_PHItoJ12N51lhlliV2tfeA_TZ1XnxRa',
   table: 'waitlist'

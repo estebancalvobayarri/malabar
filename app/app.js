@@ -19,7 +19,7 @@
   let viewDate = null;
   let busy = false;
   let pipWin = null;
-  let prefs = { compact: false, stats: true };
+  let prefs = { compact: false, stats: true, fit: true };
   let dismissedForgot = null;
   let copyText = null;
   let feedbackSent = false;
@@ -158,6 +158,25 @@
   }
   const pause = () => S.active && switchTo(null);
 
+  // ---------- Ventana ajustada al contenido (solo como app instalada) ----------
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: window-controls-overlay)').matches;
+  let fitSig = '';
+  function fitWindow(force) {
+    if (!prefs.fit || pipWin || !standalone() || typeof window.resizeTo !== 'function') return;
+    requestAnimationFrame(() => {
+      const w = (prefs.compact && view === 'main') ? 320 : 420;
+      app.style.minHeight = '0';
+      const h = Math.ceil(app.getBoundingClientRect().height);
+      const sig = w + 'x' + h;
+      if (!force && sig === fitSig) return;
+      fitSig = sig;
+      const frameW = Math.max(0, window.outerWidth - window.innerWidth);
+      const frameH = Math.max(0, window.outerHeight - window.innerHeight);
+      const maxH = (screen.availHeight || 900) - 20;
+      try { window.resizeTo(w + frameW, Math.min(h + frameH, maxH)); } catch (e) {}
+    });
+  }
+
   // ---------- Pintado ----------
   function render() {
     renderBanner();
@@ -165,6 +184,7 @@
     v.innerHTML = ({ main: mainHTML, summary: summaryHTML, segments: segmentsHTML, projects: projectsHTML, settings: settingsHTML, feedback: feedbackHTML }[view] || mainHTML)();
     app.classList.toggle('compact', !!prefs.compact && view === 'main');
     tick();
+    fitWindow(false);
   }
   function softRender() {
     const a = (pipWin ? pipWin.document : document).activeElement;
@@ -329,6 +349,11 @@
         <label class="check"><input type="checkbox" data-pref="stats" ${prefs.stats ? 'checked' : ''}>
           <span>Compartir estadísticas anónimas de uso para mejorar la beta. Solo se envía qué días usas Malabar, cuántas veces cambias de proyecto, cuántos proyectos tienes y qué funciones usas. Nunca los nombres de tus proyectos ni tus tiempos.</span></label>
       </div>
+      ${standalone() ? `<div class="panel">
+        <h3>Ventana</h3>
+        <label class="check"><input type="checkbox" data-pref="fit" ${prefs.fit ? 'checked' : ''}>
+          <span>Ajustar el tamaño de la ventana al contenido automáticamente.</span></label>
+      </div>` : ''}
       <div class="panel">
         <h3>Borrar todo</h3>
         <p class="small muted">Elimina proyectos, tramos e historial de este navegador. No se puede deshacer.</p>
@@ -517,6 +542,7 @@
   app.addEventListener('change', ev => {
     const el = ev.target;
     if (el.id === 'importFile') { if (el.files && el.files[0]) doImport(el.files[0]); return; }
+    if (el.dataset.pref === 'fit') { prefs.fit = el.checked; prefsSave(); if (el.checked) fitWindow(true); return; }
     if (el.dataset.pref === 'stats') { prefs.stats = el.checked; prefsSave(); toast(el.checked ? 'Gracias por ayudarnos' : 'No se enviarán estadísticas'); return; }
     const f = el.dataset.edit; if (!f) return;
     if (f === 'name') { const p = proj(el.dataset.pid), v = el.value.trim(); if (p && v) { p.name = v; save(); } else if (p) el.value = p.name; return; }

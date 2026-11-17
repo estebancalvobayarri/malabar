@@ -51,7 +51,6 @@
   const live = () => S.projects.filter(p => !p.archived);
   const pname = id => { const p = proj(id); return p ? p.name : '(proyecto eliminado)'; };
   const pcolor = id => { const p = proj(id); return p ? p.color : '#999'; };
-  const keyFor = i => i < 9 ? String(i + 1) : (i === 9 ? '0' : '');
   const day = k => (S.days[k] = S.days[k] || []);
   function dateLabel(k) {
     if (k === todayKey()) return 'Hoy';
@@ -232,7 +231,7 @@
         <div class="cur-name">${a ? `<span class="live-dot"></span>${esc(pname(a.p))}` : '<span class="state">En pausa</span>'}</div>
         <div class="cur-time num" id="curTotal">00:00:00</div>
         <div class="ctrls">
-          <button class="ico" data-act="pause" ${a ? '' : 'disabled'} title="Pausa (espacio)" aria-label="Pausa">${ICON_PAUSE}</button>
+          <button class="ico" data-act="pause" ${a ? '' : 'disabled'} title="Pausa" aria-label="Pausa">${ICON_PAUSE}</button>
           <button class="ico stop" data-act="end" title="Terminar jornada" aria-label="Terminar jornada">${ICON_STOP}</button>
         </div>
         <div class="cur-sub num">${a ? `Este tramo <span id="curSeg"></span> · ` : ''}Hoy en total <span id="dayTotal"></span></div>
@@ -250,8 +249,8 @@
       </nav>`;
     }
     const btns = ps.map((p, i) => `
-      <button class="pbtn ${a && a.p === p.id ? 'on' : ''}" data-act="switch" data-pid="${p.id}" style="--c:${p.color}" title="Tecla ${keyFor(i)}${a && a.p === p.id ? ' · clic para pausar' : ''}">
-        <span class="key">${keyFor(i)}</span><span class="dot"></span>
+      <button class="pbtn ${a && a.p === p.id ? 'on' : ''}" data-act="switch" data-pid="${p.id}" style="--c:${p.color}" title="${a && a.p === p.id ? 'Clic para pausar' : 'Clic para empezar a contar'}">
+        <span class="dot"></span>
         <span class="pname">${esc(p.name)}</span><span class="ptime num" data-ptime="${p.id}"></span>
       </button>`).join('');
     const pipOk = 'documentPictureInPicture' in window && !pipWin;
@@ -261,7 +260,7 @@
         <button data-act="pause" ${a ? '' : 'disabled'}>Pausa</button>
         <button class="primary" data-act="end">Terminar jornada</button>
       </div>
-      <div class="hint">Teclas 1–9 y 0 para cambiar de proyecto · espacio para pausar</div>
+      <div class="hint">Clic en un proyecto para cambiar · clic en el activo para pausar</div>
       <nav class="links">
         <button data-act="go" data-v="summary">Resumen</button>
         <button data-act="go" data-v="segments">Tramos</button>
@@ -358,8 +357,7 @@
         ${ps.length < MAX ? `<form class="addrow" data-form="add"><input name="name" placeholder="Nuevo proyecto" maxlength="40" autocomplete="off" aria-label="Nuevo proyecto"><button class="primary">Añadir</button></form>`
           : `<div class="muted small">Has llegado al máximo de ${MAX}. Quita uno para añadir otro.</div>`}
       </div>
-      ${archRows}
-      <div class="hint">El orden marca la tecla: el primero es el 1, el décimo el 0.</div>`;
+      ${archRows}`;
   }
 
   function settingsHTML() {

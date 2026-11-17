@@ -34,8 +34,7 @@
 
   /* Botones de proyecto */
   .grid{display:flex;flex-direction:column;gap:6px}
-  .pbtn{display:grid;grid-template-columns:22px 10px 1fr auto;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:12px}
-  .pbtn .key{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:5px;text-align:center;line-height:18px}
+  .pbtn{display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:12px}
   .pbtn .dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
   .pbtn .pname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pbtn .ptime{color:var(--muted);font-size:13px}
@@ -121,8 +120,7 @@
   #app.in-pip .ico svg{width:10px;height:10px}
   #app.in-pip .cur-sub,#app.in-pip .actions,#app.in-pip .hint,#app.in-pip .links,#app.in-pip .sync{display:none}
   #app.in-pip .grid{gap:3px}
-  #app.in-pip .pbtn{grid-template-columns:14px 7px 1fr auto;gap:6px;padding:3px 7px;border-radius:7px;font-size:12px}
-  #app.in-pip .pbtn .key{font-size:9px;line-height:13px;border-radius:3px}
+  #app.in-pip .pbtn{grid-template-columns:7px 1fr auto;gap:6px;padding:3px 7px;border-radius:7px;font-size:12px}
   #app.in-pip .pbtn .dot{width:7px;height:7px}
   #app.in-pip .pbtn .ptime{font-size:11px}
   #app.in-pip .banner{padding:6px 8px;font-size:11px;gap:5px}

@@ -114,8 +114,10 @@
   #app.in-pip #view{gap:5px}
   #app.in-pip .cur{padding:5px 8px 5px 12px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
   #app.in-pip .cur::before{width:4px}
-  #app.in-pip .cur-name{font-size:12px;min-height:0;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  #app.in-pip .cur-time{font-size:15px;font-weight:600;margin:0 0 0 auto}
+  /* En la ventana flotante, el nombre se sustituye por un recuadro del color del proyecto (el activo ya se ve resaltado en la lista) */
+  #app.in-pip .cur-name{font-size:0;min-height:0;flex:0 0 auto;width:14px;height:14px;border-radius:4px;background:var(--c);overflow:hidden}
+  #app.in-pip .cur-name > *{display:none}
+  #app.in-pip .cur-time{font-size:15px;font-weight:600;margin:0 auto 0 0}
   #app.in-pip .ico{width:22px;height:22px;border-radius:6px}
   #app.in-pip .ico svg{width:10px;height:10px}
   #app.in-pip .cur-sub,#app.in-pip .actions,#app.in-pip .hint,#app.in-pip .links,#app.in-pip .sync{display:none}
@@ -128,10 +130,10 @@
   /* Ventana flotante: vista amplia */
   #app.in-pip.pip-big{padding:10px;gap:8px;font-size:14px}
   #app.in-pip.pip-big #view{gap:8px}
-  #app.in-pip.pip-big .cur{padding:10px 12px 10px 16px;border-radius:12px;flex-wrap:wrap;row-gap:2px}
+  #app.in-pip.pip-big .cur{padding:10px 12px 10px 16px;border-radius:12px;gap:12px}
   #app.in-pip.pip-big .cur::before{width:5px}
-  #app.in-pip.pip-big .cur-name{font-size:14px;flex:1 1 100%}
-  #app.in-pip.pip-big .cur-time{font-size:26px;font-weight:500;margin:0}
+  #app.in-pip.pip-big .cur-name{width:20px;height:20px;border-radius:6px}
+  #app.in-pip.pip-big .cur-time{font-size:26px;font-weight:500;margin:0 auto 0 0}
   #app.in-pip.pip-big .ctrls{margin-left:auto}
   #app.in-pip.pip-big .ico{width:26px;height:26px;border-radius:7px}
   #app.in-pip.pip-big .ico svg{width:11px;height:11px}

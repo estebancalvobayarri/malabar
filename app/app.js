@@ -495,7 +495,7 @@
 
   // ---------- Ventana flotante (Chrome / Edge) ----------
   // Tamaño de la ventana flotante: compacta o amplia
-  const pipSize = big => { const n = Math.max(1, live().length); return big ? { width: 320, height: 100 + n * 42 } : { width: 270, height: 50 + n * 27 }; };
+  const pipSize = big => { const n = Math.max(1, live().length); return big ? { width: 320, height: 80 + n * 42 } : { width: 270, height: 50 + n * 27 }; };
   const pipNote = document.getElementById('pipnote');
   function fitPip() {
     if (!pipWin) return;

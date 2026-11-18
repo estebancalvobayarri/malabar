@@ -378,6 +378,7 @@
         <h3>Estadísticas anónimas</h3>
         <label class="check"><input type="checkbox" data-pref="stats" ${prefs.stats ? 'checked' : ''}>
           <span>Compartir estadísticas anónimas de uso para mejorar la beta. Solo se envía qué días usas nprojects, cuántas veces cambias de proyecto, cuántos proyectos tienes, qué funciones usas y, si entraste con un enlace de invitación, su código de grupo. Nunca los nombres de tus proyectos ni tus tiempos.</span></label>
+        <p class="small muted"><a href="../privacidad/" target="_blank" rel="noopener">Política de privacidad</a></p>
       </div>
       ${!standalone() ? `<div class="panel">
         <h3>Instalar como app</h3>
@@ -405,6 +406,7 @@
         <p class="small muted">¿Qué te falta, qué te sobra, qué te molesta? Cualquier comentario nos ayuda a mejorar la beta.</p>
         <div class="field"><label class="lbl" for="fb-msg">Tu comentario</label><textarea id="fb-msg" name="message" maxlength="4000" required></textarea></div>
         <div class="field"><label class="lbl" for="fb-email">Tu email (opcional, si quieres respuesta)</label><input id="fb-email" name="email" type="email" maxlength="254" autocomplete="email"></div>
+        <p class="small muted">Lo guardamos para leerlo y, si dejas tu email, responderte. Más detalles en la <a href="../privacidad/" target="_blank" rel="noopener">política de privacidad</a>.</p>
         <button class="primary" type="submit">Enviar</button>
       </form>`;
   }

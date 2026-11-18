@@ -85,3 +85,24 @@
   window.addEventListener('resize', update);
   update();
 })();
+
+// Logo flotante: las tres pelotas se quedan fijas donde están en la cabecera
+(function () {
+  var mark = document.querySelector('.brand .brand-mark');
+  var float = document.querySelector('.brand-float');
+  if (!mark || !float) return;
+  function place() {
+    var r = mark.getBoundingClientRect();
+    float.style.left = r.left + 'px';
+    float.style.top = (r.top + window.scrollY) + 'px';
+  }
+  document.documentElement.classList.add('js-float');
+  place();
+  window.addEventListener('resize', place);
+  window.addEventListener('load', place);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+  float.addEventListener('click', function (ev) {
+    ev.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();

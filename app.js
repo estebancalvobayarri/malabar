@@ -85,24 +85,3 @@
   window.addEventListener('resize', update);
   update();
 })();
-
-// Logo fijo: las tres pelotas de la cabecera no se van al hacer scroll
-(function () {
-  var slot = document.querySelector('.brand .brand-mark-slot');
-  var mark = slot && slot.querySelector('.brand-mark');
-  if (!mark) return;
-  function place() {
-    var r = slot.getBoundingClientRect();
-    mark.style.left = r.left + 'px';
-    mark.style.top = (r.top + window.scrollY) + 'px';
-  }
-  place();
-  document.documentElement.classList.add('js-float');
-  window.addEventListener('resize', place);
-  window.addEventListener('load', place);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
-  // Con la página bajada, pulsar las pelotas vuelve arriba
-  mark.addEventListener('click', function (ev) {
-    if (window.scrollY > 0) { ev.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-  });
-})();

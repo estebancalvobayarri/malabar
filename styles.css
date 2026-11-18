@@ -16,11 +16,10 @@ p{margin:0}
 .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:24px;padding-bottom:24px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
 .brand span{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:22px;letter-spacing:-.01em}
-/* Logo flotante: las tres pelotas se quedan fijas al hacer scroll */
-.brand-float{display:none}
-.js-float .brand-float{display:block;position:fixed;z-index:50;width:28px;height:28px;line-height:0}
-.js-float .brand-float svg{display:block}
-.js-float .brand .brand-mark{visibility:hidden}
+/* Logo fijo: las tres pelotas de la cabecera se quedan en su sitio al hacer scroll */
+.brand-mark-slot{display:block;width:28px;height:28px;flex:0 0 28px}
+.brand-mark{display:block}
+.js-float .brand-mark{position:fixed;z-index:50}
 .btn-ghost{font-weight:600;font-size:15px;text-decoration:none;padding:10px 16px;border:1px solid #D9D6CF;border-radius:10px;color:var(--ink);background:#fff}
 .btn-ghost:hover{color:var(--ink);border-color:#bdb8ad}
 

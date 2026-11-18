@@ -86,23 +86,23 @@
   update();
 })();
 
-// Logo flotante: las tres pelotas se quedan fijas donde están en la cabecera
+// Logo fijo: las tres pelotas de la cabecera no se van al hacer scroll
 (function () {
-  var mark = document.querySelector('.brand .brand-mark');
-  var float = document.querySelector('.brand-float');
-  if (!mark || !float) return;
+  var slot = document.querySelector('.brand .brand-mark-slot');
+  var mark = slot && slot.querySelector('.brand-mark');
+  if (!mark) return;
   function place() {
-    var r = mark.getBoundingClientRect();
-    float.style.left = r.left + 'px';
-    float.style.top = (r.top + window.scrollY) + 'px';
+    var r = slot.getBoundingClientRect();
+    mark.style.left = r.left + 'px';
+    mark.style.top = (r.top + window.scrollY) + 'px';
   }
-  document.documentElement.classList.add('js-float');
   place();
+  document.documentElement.classList.add('js-float');
   window.addEventListener('resize', place);
   window.addEventListener('load', place);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
-  float.addEventListener('click', function (ev) {
-    ev.preventDefault();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Con la página bajada, pulsar las pelotas vuelve arriba
+  mark.addEventListener('click', function (ev) {
+    if (window.scrollY > 0) { ev.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   });
 })();

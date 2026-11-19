@@ -32,6 +32,7 @@
   let installEvt = null;
   let dismissedForgot = null;
   let copyText = null;
+  let exp = { preset: 'this-month', from: null, to: null, project: 'all' };
   let feedbackSent = false;
 
   // ---------- Utilidades ----------
@@ -203,7 +204,7 @@
   function render() {
     renderBanner();
     const v = $('#view');
-    v.innerHTML = ({ main: mainHTML, summary: summaryHTML, segments: segmentsHTML, projects: projectsHTML, settings: settingsHTML, feedback: feedbackHTML }[view] || mainHTML)();
+    v.innerHTML = ({ main: mainHTML, summary: summaryHTML, segments: segmentsHTML, projects: projectsHTML, settings: settingsHTML, feedback: feedbackHTML, export: exportHTML }[view] || mainHTML)();
     app.classList.toggle('compact', !!prefs.compact && view === 'main');
     tick();
     fitWindow(false);
@@ -308,6 +309,7 @@
         <div class="tl-labels num"><span>${clock(t0)}</span><span>${clock(t1)}</span></div>
       </div>
       <div class="btnrow"><button data-act="copy" data-what="text">Copiar resumen</button><button data-act="csv">Descargar CSV</button></div>
+      <button class="linkish" data-act="go" data-v="export">Exportar un periodo (semana, mes o fechas)…</button>
       ${copyText ? `<textarea class="copybox" readonly aria-label="Texto para copiar">${esc(copyText)}</textarea>` : ''}`;
   }
 
@@ -372,6 +374,7 @@
           <button data-act="export">Descargar copia</button>
           <button data-act="import">Importar copia</button>
         </div>
+        <button data-act="go" data-v="export">Exportar a CSV por periodo</button>
         <input type="file" accept="application/json,.json" class="file-hidden" id="importFile">
       </div>
       <div class="panel">
@@ -449,11 +452,84 @@
       const ids = Object.keys(t).sort((a, b) => t[b] - t[a]);
       return `Resumen ${fecha}\n` + ids.map(id => `${pname(id)}: ${hm(t[id])} (${Math.round(t[id] / sum * 100)}%)`).join('\n') + `\nTotal: ${hm(sum)}`;
     }
-    const segs = (S.days[k] || []).slice();
-    if (S.active) split(S.active.p, S.active.s, Date.now()).forEach(x => x.key === k && segs.push(x.seg));
+    return csvFor(segsInRange(k, k, 'all'));
+  }
+  // Tramos (cerrados y el que está en curso) entre dos días, ambos incluidos, opcionalmente de un proyecto
+  function segsInRange(from, to, project) {
+    const out = [];
+    for (const k of Object.keys(S.days)) if (k >= from && k <= to) S.days[k].forEach(g => out.push({ k, g }));
+    if (S.active) split(S.active.p, S.active.s, Date.now()).forEach(x => { if (x.key >= from && x.key <= to) out.push({ k: x.key, g: x.seg }); });
+    return out.filter(x => project === 'all' || x.g.p === project).sort((a, b) => a.g.s - b.g.s);
+  }
+  function csvFor(list) {
     const q = s => '"' + String(s).replace(/"/g, '""') + '"';
-    // Punto y coma: es el separador que espera Excel en español
-    return 'fecha;proyecto;inicio;fin;minutos\r\n' + segs.sort((a, b) => a.s - b.s).map(g => [k, q(pname(g.p)), clock(g.s), clock(g.e), Math.round((g.e - g.s) / 60000)].join(';')).join('\r\n') + '\r\n';
+    const horas = ms => (Math.round(ms / 60000) / 60).toFixed(2).replace('.', ',');
+    // Punto y coma y coma decimal: lo que espera Excel en español
+    return 'fecha;proyecto;inicio;fin;minutos;horas\r\n'
+      + list.map(({ k, g }) => [k, q(pname(g.p)), clock(g.s), clock(g.e), Math.round((g.e - g.s) / 60000), horas(g.e - g.s)].join(';')).join('\r\n') + '\r\n';
+  }
+  function downloadText(text, name, type) {
+    const blob = new Blob(['\ufeff' + text], { type });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  // ---------- Exportar un periodo ----------
+  function presetRange(p) {
+    const today = todayKey(), d = keyToDate(today);
+    const monday = k => { const x = keyToDate(k); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return dk(x.getTime()); };
+    if (p === 'this-week') return [monday(today), today];
+    if (p === 'last-week') { const m = shiftKey(monday(today), -7); return [m, shiftKey(m, 6)]; }
+    if (p === 'this-month') return [dk(new Date(d.getFullYear(), d.getMonth(), 1).getTime()), today];
+    if (p === 'last-month') return [dk(new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime()), dk(new Date(d.getFullYear(), d.getMonth(), 0).getTime())];
+    return [exp.from || shiftKey(today, -6), exp.to || today];
+  }
+  function rangeLabel(from, to) {
+    const f = keyToDate(from), t = keyToDate(to);
+    const o = { day: 'numeric', month: 'long' };
+    if (from === to) return f.toLocaleDateString('es-ES', { ...o, year: 'numeric' });
+    return 'Del ' + f.toLocaleDateString('es-ES', f.getFullYear() === t.getFullYear() ? o : { ...o, year: 'numeric' }) + ' al ' + t.toLocaleDateString('es-ES', { ...o, year: 'numeric' });
+  }
+  function exportHTML() {
+    const [from, to] = presetRange(exp.preset);
+    const valid = from <= to;
+    const list = valid ? segsInRange(from, to, exp.project) : [];
+    const tot = {}; let sum = 0;
+    list.forEach(({ g }) => { const d = g.e - g.s; tot[g.p] = (tot[g.p] || 0) + d; sum += d; });
+    const ids = Object.keys(tot).sort((a, b) => tot[b] - tot[a]);
+    const daysCount = new Set(list.map(x => x.k)).size;
+    const opt = (v, l) => `<option value="${v}" ${exp.preset === v ? 'selected' : ''}>${l}</option>`;
+    const projOpts = `<option value="all">Todos los proyectos</option>` + S.projects.map(p => `<option value="${p.id}" ${exp.project === p.id ? 'selected' : ''}>${esc(p.name)}${p.archived ? ' (quitado)' : ''}</option>`).join('');
+    return backHead('Exportar a CSV') + `
+      <div class="panel">
+        <div class="field"><label class="lbl" for="exp-preset">Periodo</label>
+          <select id="exp-preset" data-exp="preset">${opt('this-week', 'Esta semana')}${opt('last-week', 'Semana pasada')}${opt('this-month', 'Este mes')}${opt('last-month', 'Mes pasado')}${opt('custom', 'Elegir fechas')}</select></div>
+        ${exp.preset === 'custom' ? `<div class="daterow">
+          <div class="field"><label class="lbl" for="exp-from">Desde</label><input id="exp-from" type="date" data-exp="from" value="${from}" max="${todayKey()}"></div>
+          <div class="field"><label class="lbl" for="exp-to">Hasta</label><input id="exp-to" type="date" data-exp="to" value="${to}" max="${todayKey()}"></div>
+        </div>` : ''}
+        <div class="field"><label class="lbl" for="exp-project">Proyecto</label><select id="exp-project" data-exp="project">${projOpts}</select></div>
+      </div>
+      <div class="panel">
+        <div class="muted small">${valid ? esc(rangeLabel(from, to)) : 'La fecha de inicio es posterior a la de fin'}</div>
+        ${list.length ? `<div class="total num">${hm(sum)}</div>
+          <div class="muted small">${list.length} tramo${list.length === 1 ? '' : 's'} en ${daysCount} día${daysCount === 1 ? '' : 's'}</div>
+          ${ids.length > 1 ? ids.map(id => `<div class="row" style="--c:${pcolor(id)}"><span class="dot"></span><span>${esc(pname(id))}</span><span class="num">${hm(tot[id])}</span><span class="pct num">${Math.round(tot[id] / sum * 100)}%</span></div>`).join('') : ''}`
+        : (valid ? '<div class="muted">No hay tiempo registrado en este periodo.</div>' : '')}
+      </div>
+      <button class="primary" data-act="csv-range" ${list.length ? '' : 'disabled'}>Descargar CSV</button>
+      <div class="hint">Una fila por tramo, con fecha, proyecto, inicio, fin, minutos y horas. Se abre directamente en Excel.</div>`;
+  }
+  function doCsvRange() {
+    const [from, to] = presetRange(exp.preset);
+    const list = segsInRange(from, to, exp.project);
+    if (!list.length) return;
+    const slug = exp.project === 'all' ? '' : '-' + pname(exp.project).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+    downloadText(csvFor(list), `nprojects${slug}-${from}_${to}.csv`, 'text/csv;charset=utf-8');
+    track('export_period'); toast('CSV descargado');
   }
   async function doCopy(what) {
     const txt = buildCopy(what);
@@ -462,13 +538,8 @@
     catch (e) { copyText = txt; render(); toast('Selecciona el texto de abajo y cópialo'); }
   }
   function doCsv() {
-    // BOM al principio para que Excel lea bien las tildes
-    const blob = new Blob(['\ufeff' + buildCopy('csv')], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `nprojects-${viewDate}.csv`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    // BOM al principio (en downloadText) para que Excel lea bien las tildes
+    downloadText(buildCopy('csv'), `nprojects-${viewDate}.csv`, 'text/csv;charset=utf-8');
     track('download_csv'); toast('CSV descargado');
   }
   function doExport() {
@@ -553,6 +624,7 @@
     if (act === 'pipsize') { prefs.pipBig = !prefs.pipBig; prefsSave(); app.classList.toggle('pip-big', prefs.pipBig); track(prefs.pipBig ? 'pip_big' : 'pip_small'); render(); return fitPip(); }
     if (act === 'copy') return doCopy(b.dataset.what);
     if (act === 'csv') return doCsv();
+    if (act === 'csv-range') return doCsvRange();
     if (act === 'keep') { dismissedForgot = S.active && S.active.s; return render(); }
     if (act === 'color') { const p = proj(pid); p.color = PALETTE[(PALETTE.indexOf(p.color) + 1) % PALETTE.length]; save(); return render(); }
     if (act === 'archive') {
@@ -608,6 +680,12 @@
 
   app.addEventListener('change', ev => {
     const el = ev.target;
+    if (el.dataset.exp) {
+      const f = el.dataset.exp;
+      if (f === 'preset' && el.value === 'custom') { const [a, b] = presetRange(exp.preset); exp.from = a; exp.to = b; }
+      if ((f === 'from' || f === 'to') && !/^\d{4}-\d{2}-\d{2}$/.test(el.value)) return render();
+      exp[f] = el.value; return render();
+    }
     if (el.id === 'importFile') { if (el.files && el.files[0]) doImport(el.files[0]); return; }
     if (el.dataset.pref === 'fit') { prefs.fit = el.checked; prefsSave(); if (el.checked) fitWindow(true); return; }
     if (el.dataset.pref === 'stats') { prefs.stats = el.checked; prefsSave(); toast(el.checked ? 'Gracias por ayudarnos' : 'No se enviarán estadísticas'); return; }

@@ -54,3 +54,83 @@ export function maskEmail(email?: string | null): string {
   if (!domain) return '';
   return `${user.slice(0, 1)}***@${domain}`;
 }
+
+// ---------- Correo (Resend) ----------
+export const FROM = 'nprojects <nprojects@nprojects.app>';
+export const REPLY_TO = 'nprojects@nprojects.app';
+
+export function escapeHtml(t: string): string {
+  return String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+// Plantilla sencilla: logo, contenido y pie con datos del titular
+export function emailLayout(inner: string): string {
+  return `<!doctype html><html lang="es"><body style="margin:0;background:#F7F6F3;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#17171A">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6F3;padding:32px 16px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid #E6E3DC;border-radius:16px">
+<tr><td style="padding:28px 28px 8px;font-size:20px;font-weight:700"><span style="color:#2F6BFF">&#9679;</span><span style="color:#1F9D55">&#9679;</span><span style="color:#C2410C">&#9679;</span>&nbsp; nprojects</td></tr>
+<tr><td style="padding:8px 28px 28px;font-size:16px;line-height:1.6">${inner}</td></tr>
+</table>
+<p style="max-width:520px;font-size:12px;line-height:1.5;color:#8A867D;margin:16px auto 0">nprojects · Esteban Calvo Bayarri · Calle Quart 120, Valencia (España) · <a href="${SITE}/privacidad/" style="color:#8A867D">Privacidad</a></p>
+</td></tr></table></body></html>`;
+}
+
+// Envía un correo con Resend. Si no hay clave configurada, no hace nada y devuelve false.
+export async function sendEmail(msg: { to: string; subject: string; html: string; text: string }): Promise<boolean> {
+  const key = Deno.env.get('RESEND_API_KEY');
+  if (!key) { console.warn('RESEND_API_KEY no configurada: no se envía el correo'); return false; }
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: FROM, reply_to: REPLY_TO, ...msg }),
+  });
+  if (!res.ok) { console.error('Resend', res.status, await res.text()); return false; }
+  return true;
+}
+
+export function licenseEmail(key: string, test: boolean) {
+  const subject = `${test ? '[Prueba] ' : ''}Tu clave de nprojects Pro`;
+  const html = emailLayout(`
+<h1 style="font-size:22px;margin:0 0 12px">¡Gracias por comprar nprojects Pro!</h1>
+<p style="margin:0 0 16px">Esta es tu clave de licencia:</p>
+<p style="margin:0 0 20px;padding:14px 16px;background:#F7F6F3;border:1px solid #E6E3DC;border-radius:12px;font-family:Menlo,Consolas,monospace;font-size:20px;font-weight:700;letter-spacing:.04em">${escapeHtml(key)}</p>
+<p style="margin:0 0 8px"><strong>Cómo activarla</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px"><li>Abre <a href="${SITE}/app/" style="color:#C2410C">nprojects</a>.</li><li>Ve a <em>Ajustes → nprojects Pro</em>.</li><li>Pega la clave y pulsa <em>Activar</em>.</li></ol>
+<p style="margin:0 0 16px">Puedes activarla en tus ordenadores con Windows o Mac. Guarda este correo por si la necesitas más adelante.</p>
+<p style="margin:0">Si tienes cualquier duda, responde a este correo.</p>`);
+  const text = `¡Gracias por comprar nprojects Pro!
+
+Tu clave de licencia: ${key}
+
+Cómo activarla:
+1. Abre nprojects: ${SITE}/app/
+2. Ve a Ajustes → nprojects Pro.
+3. Pega la clave y pulsa Activar.
+
+Guarda este correo por si la necesitas más adelante. Si tienes cualquier duda, responde a este correo.
+
+nprojects · Esteban Calvo Bayarri · Calle Quart 120, Valencia (España)`;
+  return { subject, html, text };
+}
+
+export function welcomeEmail() {
+  const subject = 'Ya estás en la lista de nprojects';
+  const html = emailLayout(`
+<h1 style="font-size:22px;margin:0 0 12px">¡Gracias por apuntarte!</h1>
+<p style="margin:0 0 16px">Ya estás en la lista de espera de nprojects, el contador de tiempo para quien lleva varios proyectos a la vez.</p>
+<p style="margin:0 0 16px">La beta ya está en marcha y damos acceso por tandas. Te escribiremos cuando sea tu turno, junto con tu <strong>precio de fundador: 19 €, pago único</strong>.</p>
+<p style="margin:0 0 16px">Mientras tanto, si tienes ideas o dudas, responde a este correo: lo leemos todo.</p>
+<p style="margin:0;font-size:13px;color:#8A867D">Solo te escribiremos sobre nprojects. Si no quieres recibir más correos, responde con la palabra BAJA.</p>`);
+  const text = `¡Gracias por apuntarte!
+
+Ya estás en la lista de espera de nprojects, el contador de tiempo para quien lleva varios proyectos a la vez.
+
+La beta ya está en marcha y damos acceso por tandas. Te escribiremos cuando sea tu turno, junto con tu precio de fundador: 19 €, pago único.
+
+Mientras tanto, si tienes ideas o dudas, responde a este correo: lo leemos todo.
+
+Solo te escribiremos sobre nprojects. Si no quieres recibir más correos, responde con la palabra BAJA.
+
+nprojects · Esteban Calvo Bayarri · Calle Quart 120, Valencia (España) · ${SITE}/privacidad/`;
+  return { subject, html, text };
+}

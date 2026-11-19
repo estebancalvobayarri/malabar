@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gracias por tu compra · nprojects</title>
+<meta name="description" content="Tu clave de licencia de nprojects Pro.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css?v=20261119">
+</head>
+<body>
+
+<header class="wrap nav">
+  <a class="brand" href="../" aria-label="nprojects, inicio">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="8" cy="18" r="5" fill="#2F6BFF"/><circle cx="20" cy="18" r="5" fill="#C2410C"/><circle cx="14" cy="8" r="5" fill="#1F9D55"/></svg>
+    <span>nprojects</span>
+  </a>
+  <a href="../">Volver a la web</a>
+</header>
+
+<main class="wrap legal buy">
+  <h1 id="gTitle">Un momento…</h1>
+  <p class="legal-lead" id="gLead">Estamos preparando tu clave de licencia.</p>
+  <div class="license-box" id="gBox" hidden>
+    <code id="gKey"></code>
+    <button type="button" class="btn-ghost" id="gCopy">Copiar</button>
+  </div>
+  <div id="gSteps" hidden>
+    <h2>Cómo activarla</h2>
+    <ol>
+      <li>Abre <a href="../app/">nprojects</a> en este navegador: <strong>Pro se activa solo</strong>.</li>
+      <li>En otro ordenador o navegador, ve a <em>Ajustes → nprojects Pro</em>, pega la clave y pulsa <em>Activar</em>.</li>
+    </ol>
+    <p>Guarda la clave en un lugar seguro. Recibirás el recibo de la compra por email<span id="gMail"></span>.</p>
+    <p><a class="btn-dark" href="../app/">Abrir nprojects</a></p>
+  </div>
+</main>
+
+<footer class="wrap foot">
+  <span>© 2026 nprojects</span>
+  <span class="foot-links"><a href="../aviso-legal/">Aviso legal</a><a href="../privacidad/">Privacidad</a><a href="mailto:nprojects@nprojects.app">nprojects@nprojects.app</a></span>
+</footer>
+<script>
+(function () {
+  var FN = 'https://owgnozgnkqllqpwlcedm.supabase.co/functions/v1';
+  var id = new URLSearchParams(location.search).get('session_id') || '';
+  var $ = function (i) { return document.getElementById(i); };
+  function fail(msg) { $('gTitle').textContent = 'Algo no ha ido bien'; $('gLead').textContent = msg; }
+  if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(id)) return fail('No encontramos tu pago. Si has pagado, escríbenos a nprojects@nprojects.app y te enviamos la clave.');
+  var tries = 0;
+  function load() {
+    fetch(FN + '/license?session_id=' + encodeURIComponent(id)).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.key) {
+          $('gTitle').textContent = '¡Gracias! Ya eres Pro';
+          $('gLead').textContent = 'Esta es tu clave de licencia:';
+          $('gKey').textContent = x.d.key; $('gBox').hidden = false; $('gSteps').hidden = false;
+          if (x.d.email) $('gMail').textContent = ' en ' + x.d.email;
+          try { localStorage.setItem('nprojects-license-pending', x.d.key); } catch (e) {}
+          return;
+        }
+        if (x.s === 402 && tries++ < 5) return setTimeout(load, 2000);
+        fail((x.d && x.d.error) || 'No hemos podido preparar tu clave. Escríbenos a nprojects@nprojects.app.');
+      })
+      .catch(function () { if (tries++ < 3) return setTimeout(load, 2000); fail('No hemos podido conectar. Recarga la página en un momento.'); });
+  }
+  load();
+  $('gCopy').addEventListener('click', function () {
+    var k = $('gKey').textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(k) : Promise.reject()).then(function () { $('gCopy').textContent = 'Copiada'; }, function () {});
+  });
+})();
+</script>
+</body>
+</html>

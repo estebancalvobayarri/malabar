@@ -3,6 +3,10 @@
   const APP_VERSION = 'web-0.1';
   const PALETTE = ['#4f7cff','#f2994a','#27ae60','#eb5757','#9b51e0','#2d9cdb','#e0b400','#e056a0','#00a99d','#8d6e63'];
   const MAX = 10;
+  // Plan Gratis: límites desactivados durante la beta. Ponlo a true al lanzar el Pro.
+  const FREE_LIMITS = false;
+  const FREE_MAX = 3, FREE_DAYS = 7;
+  const LS_PENDING_KEY = 'nprojects-license-pending';
   const LS_KEY = 'nprojects-data-v1';
   const LS_PREFS = 'nprojects-prefs-v1';
   const LS_METRICS = 'nprojects-metrics-v1';
@@ -28,7 +32,8 @@
   let viewDate = null;
   let busy = false;
   let pipWin = null;
-  let prefs = { compact: false, stats: true, fit: true, invite: null, pipBig: false };
+  let prefs = { compact: false, stats: true, fit: true, invite: null, pipBig: false, license: null, licenseEmail: null };
+  let activating = false;
   let installEvt = null;
   let dismissedForgot = null;
   let copyText = null;
@@ -36,6 +41,9 @@
   let feedbackSent = false;
 
   // ---------- Utilidades ----------
+  const isPro = () => !!prefs.license;
+  const limited = () => FREE_LIMITS && !isPro();
+  const maxProjects = () => limited() ? FREE_MAX : MAX;
   const pad = n => String(n).padStart(2, '0');
   const dk = ms => { const d = new Date(ms); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
   const todayKey = () => dk(Date.now());
@@ -243,7 +251,7 @@
     if (!ps.length) {
       return top + head + `
         <div class="empty">
-          <div><strong>Empieza añadiendo tus proyectos</strong><br><span class="muted small">Hasta ${MAX}. Luego, un clic en uno para empezar a contar.</span></div>
+          <div><strong>Empieza añadiendo tus proyectos</strong><br><span class="muted small">Hasta ${maxProjects()}. Luego, un clic en uno para empezar a contar.</span></div>
           <form class="addrow" data-form="add"><input name="name" placeholder="Nombre del proyecto" maxlength="40" autocomplete="off" aria-label="Nombre del proyecto"><button class="primary">Añadir</button></form>
           <p class="welcome">Tus datos se guardan solo en este navegador. Puedes cerrar la pestaña cuando quieras: el contador sigue contando y lo verás al volver.</p>
         </div>
@@ -354,19 +362,54 @@
     const archRows = arch.length ? `
       <div class="panel"><div class="muted small">Proyectos quitados (su historial se conserva)</div>
         ${arch.map(p => `<div class="prow"><span class="swatch" style="--c:${p.color};opacity:.5"></span><span class="muted">${esc(p.name)}</span>
-          <button data-act="restore" data-pid="${p.id}" ${ps.length >= MAX ? 'disabled' : ''}>Recuperar</button></div>`).join('')}
+          <button data-act="restore" data-pid="${p.id}" ${ps.length >= maxProjects() ? 'disabled' : ''}>Recuperar</button></div>`).join('')}
       </div>` : '';
-    return backHead(`Proyectos (${ps.length}/${MAX})`) + `
+    return backHead(`Proyectos (${ps.length}/${maxProjects()})`) + `
       <div class="panel">
         ${rows || '<div class="muted">Aún no hay proyectos.</div>'}
-        ${ps.length < MAX ? `<form class="addrow" data-form="add"><input name="name" placeholder="Nuevo proyecto" maxlength="40" autocomplete="off" aria-label="Nuevo proyecto"><button class="primary">Añadir</button></form>`
+        ${ps.length < maxProjects() ? `<form class="addrow" data-form="add"><input name="name" placeholder="Nuevo proyecto" maxlength="40" autocomplete="off" aria-label="Nuevo proyecto"><button class="primary">Añadir</button></form>`
+          : limited() ? `<div class="muted small">El plan Gratis permite ${FREE_MAX} proyectos. <a href="#" data-act="go" data-v="settings">Activa Pro</a> para tener hasta ${MAX}.</div>`
           : `<div class="muted small">Has llegado al máximo de ${MAX}. Quita uno para añadir otro.</div>`}
       </div>
       ${archRows}`;
   }
 
+  function proPanelHTML() {
+    if (isPro()) return `
+      <div class="panel">
+        <h3>nprojects Pro <span class="pro-badge">Activado</span></h3>
+        <p class="small muted">Clave ${esc(prefs.license)}${prefs.licenseEmail ? ` · ${esc(prefs.licenseEmail)}` : ''}. Gracias por apoyar nprojects.</p>
+        <button data-act="unlicense">Quitar la licencia de este navegador</button>
+      </div>`;
+    return `
+      <form class="panel" data-form="license">
+        <h3>nprojects Pro</h3>
+        <p class="small muted">Proyectos ilimitados, historial completo, estadísticas y exportación. Pago único de 29 €.</p>
+        <div class="addrow"><input name="key" placeholder="NPRJ-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" aria-label="Clave de licencia"><button class="primary" type="submit" ${activating ? 'disabled' : ''}>${activating ? 'Comprobando…' : 'Activar'}</button></div>
+        <p class="small muted">¿Aún no la tienes? <a href="../comprar/" target="_blank" rel="noopener">Comprar Pro</a></p>
+      </form>`;
+  }
+
+  // Comprueba la clave con el servidor y, si es válida, activa Pro en este navegador
+  function activateLicense(key, quiet) {
+    if (!CFG.supabaseUrl) { if (!quiet) toast('No se puede activar sin conexión al servidor'); return Promise.resolve(false); }
+    activating = true; if (!quiet) render();
+    return fetch(CFG.supabaseUrl + '/functions/v1/activate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey || '' }, body: JSON.stringify({ key })
+    }).then(r => r.json().catch(() => ({}))).then(d => {
+      activating = false;
+      if (d && d.ok) {
+        prefs.license = d.key; prefs.licenseEmail = d.email || null; prefsSave();
+        try { localStorage.removeItem(LS_PENDING_KEY); } catch (e) {}
+        track('pro_activated'); render(); toast('¡Pro activado!'); return true;
+      }
+      if (!quiet) { render(); toast((d && d.error) || 'No encontramos esa clave'); }
+      return false;
+    }).catch(() => { activating = false; if (!quiet) { render(); toast('No se pudo conectar. Inténtalo de nuevo.'); } return false; });
+  }
+
   function settingsHTML() {
-    return backHead('Ajustes') + `
+    return backHead('Ajustes') + proPanelHTML() + `
       <div class="panel">
         <h3>Tus datos</h3>
         <p class="small muted">Se guardan solo en este navegador. Haz una copia de vez en cuando: si borras los datos del navegador, se pierden. También te servirá para pasarlos a la app de escritorio.</p>
@@ -617,7 +660,14 @@
     }
     if (act === 'go') { view = b.dataset.v; viewDate = todayKey(); copyText = null; if (view !== 'feedback') track(view); return render(); }
     if (act === 'back') { view = 'main'; return render(); }
-    if (act === 'prev') { viewDate = shiftKey(viewDate, -1); copyText = null; return render(); }
+    if (act === 'unlicense') {
+      if (!confirm('¿Quitar la licencia Pro de este navegador? Podrás volver a activarla con tu clave.')) return;
+      prefs.license = null; prefs.licenseEmail = null; prefsSave(); return render();
+    }
+    if (act === 'prev') {
+      if (limited() && viewDate <= shiftKey(todayKey(), -(FREE_DAYS - 1))) return toast(`El plan Gratis muestra los últimos ${FREE_DAYS} días. Con Pro ves todo tu historial.`);
+      viewDate = shiftKey(viewDate, -1); copyText = null; return render();
+    }
     if (act === 'next') { viewDate = shiftKey(viewDate, 1); copyText = null; return render(); }
     if (act === 'compact') { prefs.compact = !prefs.compact; prefsSave(); if (prefs.compact) track('compact'); return render(); }
     if (act === 'pip') return openPip();
@@ -631,7 +681,7 @@
       if (S.active && S.active.p === pid) closeActive(Date.now(), null);
       proj(pid).archived = true; save(); return render();
     }
-    if (act === 'restore') { if (live().length < MAX) { delete proj(pid).archived; save(); } return render(); }
+    if (act === 'restore') { if (live().length < maxProjects()) { delete proj(pid).archived; save(); } return render(); }
     if (act === 'delseg') { day(viewDate).splice(+b.dataset.i, 1); save(); track('segments_edit'); return render(); }
     if (act === 'addseg') {
       const k = viewDate, list = day(k);
@@ -655,11 +705,15 @@
     const f = ev.target;
     if (f.dataset.form === 'add') {
       const name = f.name.value.trim(); if (!name) return;
-      if (live().length >= MAX) return toast(`Máximo ${MAX} proyectos`);
+      if (live().length >= maxProjects()) return toast(limited() ? `El plan Gratis permite ${FREE_MAX} proyectos` : `Máximo ${MAX} proyectos`);
       const used = new Set(live().map(p => p.color));
       S.projects.push({ id: newId(), name, color: PALETTE.find(c => !used.has(c)) || PALETTE[S.projects.length % PALETTE.length] });
       save(); track('project_add'); render();
       const inp = $('form[data-form="add"] input'); if (inp) inp.focus();
+    }
+    if (f.dataset.form === 'license') {
+      const key = f.key.value.trim(); if (!key) return toast('Pega tu clave de licencia');
+      return activateLicense(key, false);
     }
     if (f.dataset.form === 'forgot' && S.active) {
       let end = timeOn(dk(S.active.s), f.t.value);
@@ -739,6 +793,8 @@
   mLoad();
   if (standalone()) track('standalone');
   render();
+  // Clave guardada por la página de «gracias» tras la compra: se activa sola
+  try { const pend = localStorage.getItem(LS_PENDING_KEY); if (pend && !isPro()) activateLicense(pend, true); } catch (e) {}
   setInterval(tick, 1000);
   setInterval(() => mFlush(false), 30 * 60e3);
 })();

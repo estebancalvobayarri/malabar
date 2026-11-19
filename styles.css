@@ -177,3 +177,13 @@ button[disabled]{opacity:.6;cursor:default}
   .shots-dots button{width:8px;height:8px;padding:0;border:0;border-radius:999px;background:#D9D6CF;cursor:pointer;transition:width .2s,background .2s}
   .shots-dots button[aria-current="true"]{width:22px;background:var(--accent)}
 }
+
+/* Compra */
+.buy-test{background:#FFF4D6;border:1px solid #F2D58A;color:#6B4E00;border-radius:12px;padding:12px 16px;font-size:14px}
+.buy-list{font-size:17px;color:var(--ink)}
+.buy-btn{display:inline-block;margin:8px 0 4px;text-decoration:none}
+.buy-msg{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.small-note{font-size:14px;color:var(--muted)}
+.license-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 24px;padding:16px 20px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.license-box code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:22px;font-weight:600;letter-spacing:.04em;color:var(--ink)}
+a.btn-dark,a.btn-primary{display:inline-flex;align-items:center;text-decoration:none}

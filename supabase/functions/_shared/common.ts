@@ -23,6 +23,8 @@ export async function stripe(path: string, init: { method?: string; body?: URLSe
     headers: {
       Authorization: `Bearer ${key}`,
       'Content-Type': 'application/x-www-form-urlencoded',
+      // Versión de la API que pide Managed Payments (2025-03-31.basil o posterior)
+      'Stripe-Version': '2025-03-31.basil',
     },
     body: init.body,
   });

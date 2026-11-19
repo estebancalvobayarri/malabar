@@ -71,7 +71,7 @@ export function emailLayout(inner: string): string {
 <tr><td style="padding:28px 28px 8px;font-size:20px;font-weight:700"><span style="color:#2F6BFF">&#9679;</span><span style="color:#1F9D55">&#9679;</span><span style="color:#C2410C">&#9679;</span>&nbsp; nprojects</td></tr>
 <tr><td style="padding:8px 28px 28px;font-size:16px;line-height:1.6">${inner}</td></tr>
 </table>
-<p style="max-width:520px;font-size:12px;line-height:1.5;color:#8A867D;margin:16px auto 0">nprojects · Esteban Calvo Bayarri · Calle Quart 120, Valencia (España) · <a href="${SITE}/privacidad/" style="color:#8A867D">Privacidad</a></p>
+<p style="max-width:520px;font-size:12px;line-height:1.5;color:#8A867D;margin:16px auto 0">Enviado por nprojects · <a href="${SITE}/aviso-legal/" style="color:#8A867D">Aviso legal</a> · <a href="${SITE}/privacidad/" style="color:#8A867D">Privacidad</a></p>
 </td></tr></table></body></html>`;
 }
 
@@ -109,7 +109,7 @@ Cómo activarla:
 
 Guarda este correo por si la necesitas más adelante. Si tienes cualquier duda, responde a este correo.
 
-nprojects · Esteban Calvo Bayarri · Calle Quart 120, Valencia (España)`;
+Enviado por nprojects · Aviso legal: ${SITE}/aviso-legal/`;
   return { subject, html, text };
 }
 
@@ -131,6 +131,6 @@ Mientras tanto, si tienes ideas o dudas, responde a este correo: lo leemos todo.
 
 Solo te escribiremos sobre nprojects. Si no quieres recibir más correos, responde con la palabra BAJA.
 
-nprojects · Esteban Calvo Bayarri · Calle Quart 120, Valencia (España) · ${SITE}/privacidad/`;
+Enviado por nprojects · Aviso legal: ${SITE}/aviso-legal/ · Privacidad: ${SITE}/privacidad/`;
   return { subject, html, text };
 }

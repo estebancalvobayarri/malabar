@@ -134,3 +134,59 @@ Solo te escribiremos sobre nprojects. Si no quieres recibir más correos, respon
 Enviado por nprojects · Aviso legal: ${SITE}/aviso-legal/ · Privacidad: ${SITE}/privacidad/`;
   return { subject, html, text };
 }
+
+// ---------- Licencias ----------
+// Crea (si no existe) la licencia de una sesión de pago completada y envía la clave por email una sola vez.
+// La usan tanto la página de «gracias» como el webhook de Stripe: la que llegue primero la crea.
+// deno-lint-ignore no-explicit-any
+export async function ensureLicense(db: any, s: any): Promise<{ key: string; email: string | null }> {
+  const sessionId = s.id as string;
+  let { data: lic } = await db.from('licenses').select('license_key,email,livemode,email_sent_at').eq('stripe_session_id', sessionId).maybeSingle();
+  if (!lic) {
+    const row = {
+      license_key: newLicenseKey(),
+      email: s.customer_details?.email ?? null,
+      stripe_session_id: sessionId,
+      amount_total: s.amount_total ?? null,
+      currency: s.currency ?? null,
+      livemode: !!s.livemode,
+    };
+    const { error } = await db.from('licenses').insert(row);
+    if (error) {
+      // Otra petición la creó a la vez: leer la suya
+      const again = await db.from('licenses').select('license_key,email,livemode,email_sent_at').eq('stripe_session_id', sessionId).maybeSingle();
+      if (!again.data) throw error;
+      lic = again.data;
+    } else {
+      lic = { ...row, email_sent_at: null };
+    }
+  }
+  // Enviar el email una sola vez: se «reserva» marcando la fecha antes de enviar
+  if (lic.email && !lic.email_sent_at) {
+    const { data: claimed } = await db.from('licenses').update({ email_sent_at: new Date().toISOString() })
+      .eq('stripe_session_id', sessionId).is('email_sent_at', null).select('id').maybeSingle();
+    if (claimed) {
+      const sent = await sendEmail({ to: lic.email, ...licenseEmail(lic.license_key, !lic.livemode) }).catch(() => false);
+      if (!sent) await db.from('licenses').update({ email_sent_at: null }).eq('stripe_session_id', sessionId);
+    }
+  }
+  return { key: lic.license_key, email: lic.email };
+}
+
+// Comprueba la firma de un webhook de Stripe (cabecera Stripe-Signature) con el secreto whsec_…
+export async function verifyStripeSignature(payload: string, header: string | null, secret: string, toleranceSec = 300): Promise<boolean> {
+  if (!header) return false;
+  const t = Number(header.split(',').find((p) => p.startsWith('t='))?.slice(2));
+  const sigs = header.split(',').filter((p) => p.startsWith('v1=')).map((p) => p.slice(3));
+  if (!t || !sigs.length) return false;
+  if (Math.abs(Date.now() / 1000 - t) > toleranceSec) return false;
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${t}.${payload}`)));
+  const expected = Array.from(mac, (b) => b.toString(16).padStart(2, '0')).join('');
+  return sigs.some((sig) => sig.length === expected.length && timingSafeEqual(sig, expected));
+}
+function timingSafeEqual(a: string, b: string): boolean {
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}

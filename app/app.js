@@ -384,7 +384,7 @@
     return `
       <form class="panel" data-form="license">
         <h3>nprojects Pro</h3>
-        <p class="small muted">Proyectos ilimitados, historial completo, estadísticas y exportación. Pago único de 29 €.</p>
+        <p class="small muted">Hasta 10 proyectos a la vez, historial completo, estadísticas y exportación. Pago único de 29 €.</p>
         <div class="addrow"><input name="key" placeholder="NPRJ-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" aria-label="Clave de licencia"><button class="primary" type="submit" ${activating ? 'disabled' : ''}>${activating ? 'Comprobando…' : 'Activar'}</button></div>
         <p class="small muted">¿Aún no la tienes? <a href="../comprar/" target="_blank" rel="noopener">Comprar Pro</a></p>
       </form>`;

@@ -14,10 +14,14 @@ export function json(data: unknown, status = 200): Response {
   });
 }
 
-// Llamada a la API de Stripe con la clave secreta guardada como secreto de Supabase
-export async function stripe(path: string, init: { method?: string; body?: URLSearchParams } = {}) {
-  const key = Deno.env.get('STRIPE_SECRET_KEY');
-  if (!key) throw new Error('Falta el secreto STRIPE_SECRET_KEY');
+// ¿Se cobra de verdad? Se activa poniendo el secreto STRIPE_MODE=live en Supabase.
+export const LIVE = Deno.env.get('STRIPE_MODE') === 'live';
+
+// Llamada a la API de Stripe. Modo prueba: STRIPE_SECRET_KEY (sk_test_…). Modo real: STRIPE_SECRET_KEY_LIVE (sk_live_…).
+export async function stripe(path: string, init: { method?: string; body?: URLSearchParams } = {}, live = false) {
+  const name = live ? 'STRIPE_SECRET_KEY_LIVE' : 'STRIPE_SECRET_KEY';
+  const key = Deno.env.get(name);
+  if (!key) throw new Error(`Falta el secreto ${name}`);
   const res = await fetch(`https://api.stripe.com/v1/${path}`, {
     method: init.method ?? 'GET',
     headers: {

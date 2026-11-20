@@ -797,4 +797,8 @@
   try { const pend = localStorage.getItem(LS_PENDING_KEY); if (pend && !isPro()) activateLicense(pend, true); } catch (e) {}
   setInterval(tick, 1000);
   setInterval(() => mFlush(false), 30 * 60e3);
+  // Funcionar sin conexión (y requisito para publicar en la Microsoft Store)
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
 })();

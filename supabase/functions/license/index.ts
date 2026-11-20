@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const { data: existing } = await db.from('licenses').select('license_key,email').eq('stripe_session_id', sessionId).maybeSingle();
     if (existing) return json({ key: existing.license_key, email: existing.email });
 
-    const s = await stripe(`checkout/sessions/${sessionId}`);
+    const s = await stripe(`checkout/sessions/${sessionId}`, {}, sessionId.startsWith('cs_live_'));
     if (s.status !== 'complete' || !['paid', 'no_payment_required'].includes(s.payment_status)) {
       return json({ error: 'El pago todavía no está completado' }, 402);
     }

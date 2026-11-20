@@ -9,10 +9,14 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);
-  const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-  if (!secret) { console.error('Falta STRIPE_WEBHOOK_SECRET'); return json({ error: 'Sin configurar' }, 500); }
+  // Un secreto por cada endpoint: el de prueba y el de modo real
+  const secrets = [Deno.env.get('STRIPE_WEBHOOK_SECRET'), Deno.env.get('STRIPE_WEBHOOK_SECRET_LIVE')].filter(Boolean) as string[];
+  if (!secrets.length) { console.error('Falta STRIPE_WEBHOOK_SECRET'); return json({ error: 'Sin configurar' }, 500); }
   const payload = await req.text();
-  if (!(await verifyStripeSignature(payload, req.headers.get('stripe-signature'), secret))) {
+  const sig = req.headers.get('stripe-signature');
+  let valid = false;
+  for (const secret of secrets) if (await verifyStripeSignature(payload, sig, secret)) { valid = true; break; }
+  if (!valid) {
     return json({ error: 'Firma no válida' }, 400);
   }
   try {

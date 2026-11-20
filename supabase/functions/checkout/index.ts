@@ -1,10 +1,12 @@
 // Crea una sesión de pago de Stripe con Managed Payments (Stripe es el vendedor legal y gestiona el IVA)
 // y redirige al cliente a la página de pago. Se abre con un enlace normal: /functions/v1/checkout
-import { SITE, corsHeaders, json, stripe } from '../_shared/common.ts';
+import { SITE, LIVE, corsHeaders, json, stripe } from '../_shared/common.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
   try {
+    // En modo real se puede seguir probando con /functions/v1/checkout?prueba=1
+    const live = LIVE && new URL(req.url).searchParams.get('prueba') !== '1';
     const body = new URLSearchParams();
     body.set('mode', 'payment');
     body.set('managed_payments[enabled]', 'true');
@@ -21,7 +23,7 @@ Deno.serve(async (req) => {
     body.set('locale', 'es');
     body.set('success_url', `${SITE}/gracias/?session_id={CHECKOUT_SESSION_ID}`);
     body.set('cancel_url', `${SITE}/comprar/?cancelado=1`);
-    const session = await stripe('checkout/sessions', { method: 'POST', body });
+    const session = await stripe('checkout/sessions', { method: 'POST', body }, live);
     if (req.method === 'POST') return json({ url: session.url });
     return new Response(null, { status: 303, headers: { ...corsHeaders, Location: session.url } });
   } catch (e) {

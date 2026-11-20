@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     body.set('line_items[0][price_data][unit_amount]', '2900');
     body.set('line_items[0][price_data][tax_behavior]', 'inclusive');
     body.set('line_items[0][price_data][product_data][name]', 'nprojects Pro');
-    body.set('line_items[0][price_data][product_data][description]', 'Licencia de pago único: proyectos ilimitados, historial completo, estadísticas y exportación.');
+    body.set('line_items[0][price_data][product_data][description]', 'Licencia de pago único: hasta 10 proyectos a la vez, historial completo, estadísticas y exportación.');
     // Software como servicio, uso personal: código admitido por Managed Payments
     body.set('line_items[0][price_data][product_data][tax_code]', 'txcd_10103000');
     // Códigos de descuento (por ejemplo, el de fundador) creados en el panel de Stripe

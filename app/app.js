@@ -377,13 +377,13 @@
   function proPanelHTML() {
     if (isPro()) return `
       <div class="panel">
-        <h3>nprojects Pro <span class="pro-badge">Activado</span></h3>
+        <h3>Nprojects Pro <span class="pro-badge">Activado</span></h3>
         <p class="small muted">Clave ${esc(prefs.license)}${prefs.licenseEmail ? ` · ${esc(prefs.licenseEmail)}` : ''}. Gracias por apoyar nprojects.</p>
         <button data-act="unlicense">Quitar la licencia de este navegador</button>
       </div>`;
     return `
       <form class="panel" data-form="license">
-        <h3>nprojects Pro</h3>
+        <h3>Nprojects Pro</h3>
         <p class="small muted">Hasta 10 proyectos a la vez, historial completo, estadísticas y exportación. Pago único de 29 €.</p>
         <div class="addrow"><input name="key" placeholder="NPRJ-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" aria-label="Clave de licencia"><button class="primary" type="submit" ${activating ? 'disabled' : ''}>${activating ? 'Comprobando…' : 'Activar'}</button></div>
         <p class="small muted">¿Aún no la tienes? <a href="../comprar/" target="_blank" rel="noopener">Comprar Pro</a></p>
@@ -442,7 +442,7 @@
         <p class="small muted">Elimina proyectos, tramos e historial de este navegador. No se puede deshacer.</p>
         <button class="danger" data-act="wipe">Borrar todos los datos</button>
       </div>
-      <div class="hint">nprojects ${APP_VERSION} · beta gratuita</div>`;
+      <div class="hint">Nprojects ${APP_VERSION} · beta gratuita</div>`;
   }
 
   function feedbackHTML() {
@@ -778,7 +778,7 @@
 
   // ---------- Instalar como app ----------
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; softRender(); });
-  window.addEventListener('appinstalled', () => { installEvt = null; track('installed'); toast('nprojects instalada. Ya la tienes como app.'); softRender(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; track('installed'); toast('Nprojects instalada. Ya la tienes como app.'); softRender(); });
   async function doInstall() {
     if (!installEvt) return;
     const e = installEvt; installEvt = null;
